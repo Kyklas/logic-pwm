@@ -34,23 +34,21 @@ void PWMAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel &channel, D
     char number_str[128] = {0};
     char delta_str[128] = {0};
     char *units = NULL;
-    FillDelta(frame_index, delta_str, sizeof(delta_str));
 
-    if (mSettings->mAnalysisType == ANALYSIS_WIDTH) {
-        snprintf(number_str, sizeof(number_str), Width(frame) > 9 ? "%.0f" : "%.1f", Width(frame));
-        units = " μS";
-    } else {
-        snprintf(number_str, sizeof(number_str), "%.1f", DutyCycle(frame));
-        units = "%";
-    }
-    AddResultString(number_str, units, delta_str);
-    AddResultString(number_str, delta_str);
-    AddResultString(number_str, units);
-    AddResultString(number_str);
+	if (frame.mType == 0)
+	{
+		AddResultString("RET");
+	}
+	else
+	{
+		snprintf(number_str, sizeof(number_str), "%d-0x%06X%s",frame.mData2,frame.mData1, (frame.mType==1)?"":" *");
+		AddResultString(number_str);
+	}
 }
 
 void PWMAnalyzerResults::GenerateExportFile(const char *file, DisplayBase display_base, U32 export_type_user_id)
 {
+
     std::ofstream file_stream(file, std::ios::out);
 
     U64 trigger_sample = mAnalyzer->GetTriggerSample();
@@ -85,27 +83,32 @@ void PWMAnalyzerResults::GenerateExportFile(const char *file, DisplayBase displa
 
 void PWMAnalyzerResults::GenerateFrameTabularText(U64 frame_index, DisplayBase display_base)
 {
+	//return;
     Frame frame = GetFrame(frame_index);
     ClearTabularText();
 
     char number_str[128];
     char delta_str[128] = {0};
     char *units = NULL;
-    FillDelta(frame_index, delta_str, sizeof(delta_str));
-
-    if (mSettings->mAnalysisType == ANALYSIS_WIDTH) {
-        snprintf(number_str, sizeof(number_str), Width(frame) > 9 ? "%.0f" : "%.1f", Width(frame));
-        units = " μS";
-    } else {
-        snprintf(number_str, sizeof(number_str), "%.1f", DutyCycle(frame));
-        units = "%";
-    }
-
-    AddTabularText(number_str, units, delta_str);
+	if (frame.mType == 0)
+	{
+		AddTabularText("RET");
+	}
+	else
+	{
+		//if (frame_index < 1 || GetFrame(frame_index-1).mData1 != frame.mData1)
+		if(frame.mType == 2)
+		{
+			snprintf(number_str, sizeof(number_str), "%d-0x%06X", frame.mData2, frame.mData1);
+			AddTabularText(number_str);
+		}
+	}
 }
 
 void PWMAnalyzerResults::FillDelta(U64 frame_index, char *b, size_t len)
 {
+	return;
+
     if (frame_index == 0) {
         return;
     }
@@ -118,7 +121,8 @@ void PWMAnalyzerResults::FillDelta(U64 frame_index, char *b, size_t len)
     double prevval = mAnalyzer->Value(prev.mStartingSampleInclusive, prev.mData1,
                                       prev.mEndingSampleInclusive);
 
-    snprintf(b, len, " (%s%.0f)", (val-prevval > 0 ? "+" : ""), val-prevval);
+    _snprintf(b, len, " (%s%.0f)", (val-prevval > 0 ? "+" : ""), val-prevval);
+	//_snprintf(b, len, " (%s%.0f)","kyklas");
 }
 
 void PWMAnalyzerResults::GeneratePacketTabularText(U64 packet_id, DisplayBase display_base)
