@@ -28,12 +28,11 @@ double PWMAnalyzerResults::Width(Frame frame)
 
 void PWMAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel &channel, DisplayBase display_base)
 {
+	//return;
     ClearResultStrings();
     Frame frame = GetFrame(frame_index);
 
     char number_str[128] = {0};
-    char delta_str[128] = {0};
-    char *units = NULL;
 
 	if (frame.mType == 0)
 	{
@@ -41,7 +40,7 @@ void PWMAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel &channel, D
 	}
 	else
 	{
-		snprintf(number_str, sizeof(number_str), "%d-0x%06X%s",frame.mData2,frame.mData1, (frame.mType==1)?"":" *");
+		snprintf(number_str, sizeof(number_str), "%d-0x%06X",frame.mData2,frame.mData1);
 		AddResultString(number_str);
 	}
 }
@@ -88,20 +87,14 @@ void PWMAnalyzerResults::GenerateFrameTabularText(U64 frame_index, DisplayBase d
     ClearTabularText();
 
     char number_str[128];
-    char delta_str[128] = {0};
-    char *units = NULL;
 	if (frame.mType == 0)
 	{
 		AddTabularText("RET");
 	}
 	else
 	{
-		//if (frame_index < 1 || GetFrame(frame_index-1).mData1 != frame.mData1)
-		if(frame.mType == 2)
-		{
 			snprintf(number_str, sizeof(number_str), "%d-0x%06X", frame.mData2, frame.mData1);
 			AddTabularText(number_str);
-		}
 	}
 }
 
