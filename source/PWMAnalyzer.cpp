@@ -100,41 +100,64 @@ void PWMAnalyzer::WorkerThread()
 		//	mResults->AddMarker(px_time[px_idx][1],
 		//		AnalyzerResults::DownArrow, mSettings->mInputChannel);
 
+			LOW_CHECK:
+
 			// check Low pulse
-			px_time[px_idx][2] = mPWM->GetSampleOfNextEdge(); // rising
+			mPWM->AdvanceToNextEdge(); // Rising
+			px_time[px_idx][2] = mPWM->GetSampleNumber(); // rising
 			pulse_time_us = SamplesToUs(px_time[px_idx][2] - px_time[px_idx][1]);
 			if (0.45f <= pulse_time_us && pulse_time_us <= 5.0f)
+			//if (0.30f <= pulse_time_us && pulse_time_us <= 5.0f)
 			{
 				// data
 
-				// Move on the Data channel
-				mPWM->AdvanceToNextEdge();
+				// short low pusle, do we have a spike
+				U64 spike_width = mPWM->GetSampleOfNextEdge() - px_time[px_idx][2];
+
+				if (spike_width == 1)
+				{
+					mResults->AddMarker(px_time[px_idx][2] - 1,
+						AnalyzerResults::ErrorDot,
+						mSettings->mInputChannel);
+
+					mPWM->AdvanceToNextEdge(); // falling
+											   // Try low pulse check again.
+					goto LOW_CHECK;
+
+				}
 			}
 			else if (0.6f <= pulse_time_us)
 			{
 				// data and latch
-
+				latch_end = px_time[px_idx][2];
 				px_time[px_idx][2] = px_time[px_idx][1] +  (U64)(0.6f / SampleQuantumUS);
-
-				latch_start = px_time[px_idx][2];
-				mPWM->AdvanceToNextEdge();
-				latch_end = mPWM->GetSampleNumber(); // rising
-
+				latch_start = px_time[px_idx][2];			
 				break;
 			}
 			else
-			{				
-				// this low pulse is not valid
-				// this is not a valid pulse
-				mResults->AddMarker((px_time[px_idx][2] + px_time[px_idx][1]) / 2,
-					AnalyzerResults::ErrorSquare,
-					mSettings->mInputChannel);
+			{	
+				// short low pusle, do we have a spike
+				U64 spike_width = mPWM->GetSampleOfNextEdge() - px_time[px_idx][2];
 
+				if (spike_width == 1)
+				{
+					mResults->AddMarker(px_time[px_idx][2]-1,
+						AnalyzerResults::ErrorDot,
+						mSettings->mInputChannel);
 
+					mPWM->AdvanceToNextEdge(); // falling
+					// Try low pulse check again.
+					goto LOW_CHECK;
 
-
-				// XXX for now
-				mPWM->AdvanceToNextEdge();
+				}
+				else
+				{
+					// this low pulse is not valid
+					// this is not a valid pulse
+					mResults->AddMarker((px_time[px_idx][2] + px_time[px_idx][1]) / 2,
+						AnalyzerResults::ErrorSquare,
+						mSettings->mInputChannel);
+				}
 			}
 			if (px_idx == 23)
 				break;

@@ -31,6 +31,9 @@ void PWMAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel &channel, D
 	//return;
     ClearResultStrings();
     Frame frame = GetFrame(frame_index);
+	const Frame * lastframe = NULL;
+	if(frame_index > 0 )
+		lastframe = &GetFrame(frame_index - 1);
 
     char number_str[128] = {0};
 
@@ -38,7 +41,7 @@ void PWMAnalyzerResults::GenerateBubbleText(U64 frame_index, Channel &channel, D
 	{
 		AddResultString("RET");
 	}
-	else
+	else if(frame.mData2 == 0 ||   (lastframe !=NULL && lastframe->mData1 != frame.mData1 ) )
 	{
 		snprintf(number_str, sizeof(number_str), "%d-0x%06X",frame.mData2,frame.mData1);
 		AddResultString(number_str);
@@ -84,6 +87,10 @@ void PWMAnalyzerResults::GenerateFrameTabularText(U64 frame_index, DisplayBase d
 {
 	//return;
     Frame frame = GetFrame(frame_index);
+	const Frame * lastframe = NULL;
+	if (frame_index > 0)
+		lastframe = &GetFrame(frame_index - 1);
+
     ClearTabularText();
 
     char number_str[128];
@@ -91,7 +98,7 @@ void PWMAnalyzerResults::GenerateFrameTabularText(U64 frame_index, DisplayBase d
 	{
 		AddTabularText("RET");
 	}
-	else
+	else if (frame.mData2 == 0 || (lastframe != NULL && lastframe->mData1 != frame.mData1))
 	{
 			snprintf(number_str, sizeof(number_str), "%d-0x%06X", frame.mData2, frame.mData1);
 			AddTabularText(number_str);
